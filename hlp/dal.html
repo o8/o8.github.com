@@ -1,0 +1,407 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8" />
+<title>Oxygen documentation</title>
+<link rel="stylesheet" type="text/css" href="index.css" />
+</head><body>
+
+
+
+<h1>Database abstraction layer</h1>
+
+<p>
+The database abstraction layer is a simple library built on top of PDO to simplify the access to the database and to provide database indepentence. The library consists of a single
+class, called <span class="code">Database</span> with many static functions and a global static state. Currently, it has been tested with MySql and Oracle databases, but it probably
+works with other vendors as well.
+</p>
+
+<p class="warning">
+The static architecture makes it hard sometimes to mock the operations for testing purposes. It is planned that this will change into a dynamic extensible architecture in the future.
+However, the global state will be optionally used as it is very convenient for a good percentage of simple, single-database applications.
+</p>
+
+<p>
+The database layer maintains stack of active database connections. To open a connection, use the function <span class="code">Database::Connect()</span>. This will add the new connection
+to the top of the stack. <span class="code">Database::Disconnect()</span> on the other hand, will close the connection and remove it from the stack. The call of this function is
+not mandatory because it will be called automatically at the end of the script.
+</p>
+
+<p class="code">
+Database::Connect( $server1, $schema1, $username1, $password1, Database::MYSQL );
+
+	// we are now connected to a MySQL database
+
+Database::Connect( $server2, $schema2, $username2, $password2, Database::ORACLE );
+
+	// we are now connected to an Oracle database
+
+Database::Disconnect();
+
+	// we have been disconnected from Oracle, and returned to the MySql database.
+</p>
+
+<p>
+In addition to <span class="code">Database::Connect()</span>, there is also the function <span class="code">Database::ConnectManaged()</span> which will connect to a database and
+also run the database upgrade system to ensure that the schema is up to date. This system is presented at the end of this chapter. The function will also empty the stack and close
+any open connections before connecting. Therefore, there can be no more than one managed connection and all other unmanaged connections should be place on top of it.
+</p>
+
+<p>
+The details of the current active connection can be retrieved with the following set of functions:
+</p>
+
+<p class="code">
+Database::IsConnected();   // boolean
+Database::GetServer();     // string
+Database::GetSchema();     // string
+Database::GetType();       // int (Database::MYSQL or Database::ORACLE)
+</p>
+
+<h2>Execute</h2>
+
+<p>
+All queries are handled by the function <span class="code">Database::Execute()</span>. This function takes an SQL query in as string form, plus a number of arguments to be bound
+to placeholders marked with <b>?</b>. The arguments can have be of any type supported by the OmniType system (see the chapter on the <a href="types.html">Type System</a>).
+</p>
+
+<p class="code">
+Database::Execute('DELETE FROM Books WHERE id=?', $id);
+</p>
+
+<p>
+If the query is a SELECT, then the results are return in the form of a <span class="code">DBReader</span>, which is a forward only cursor. Each column is a wrapped <span class="code">DBValue</span>
+which should be imported by using the proper OmniType.
+</p>
+
+<p class="code">
+$dr = Database::Execute('SELECT * FROM Books');
+while ($dr->Read()){
+	$id = $dr['id']->CastTo( OmniID::Type() );
+	$title = $dr['id']->CastTo( OmniString::Type() );
+	echo $id->AsHex();
+	echo $title;
+}
+$dr->Close();
+</p>
+
+
+<h2>DML functions</h2>
+
+<p>
+Data Manipulation Language (DML) functions are those functions that deal with the content of the tables. The <span class="code">Database</span> class offers a few helpers for common DML commands.
+</p>
+
+<h3>ExecuteScalar</h3>
+
+<p>
+This function will return directly a <span class="code">DBValue</span> with the first column of the first row of the results. If there are none, then a wrapped null will be returned.
+</p>
+
+<p class="code">
+$count = Database::ExecuteScalar('SELECT COUNT(*) FROM Books')->CastTo( OmniInteger::Type() );
+$id = Database::ExecuteScalar('SELECT id FROM Books WHERE Name=?', 'Alice in wonderland')->CastTo( OmniIDOrNull::Type() );
+</p>
+
+
+<h3>ExecuteColumnOf</h3>
+
+<p>
+This function will return an array of the first column of the results. Each element of the array will be casted to the predefined OmniType.
+</p>
+
+<p class="code">
+$author_ids = Database::ExecuteColumnOf( OmniID::Type , 'SELECT idAuthor FROM Books WHERE idAuthor IS NOT NULL' );
+</p>
+
+<h3>ExecuteInsert</h3>
+
+<p>
+Insert a row into a table with name-value pairs
+</p>
+
+<p class="code">
+// INSERT INTO `Books` (`id`,`Title`) VALUES (?, ?)
+// bind [3,'Alice in wonderland']
+Database::ExecuteInsert('Books'
+	,'id', new ID(3)                
+	,'Title', 'Alice in wonderland'
+	);
+</p>
+
+<h3>ExecuteUpdate and ExecuteUpdateAll</h3>
+
+<p>
+Update name-value pairs into a table with or without a WHERE clause.
+</p>
+
+<p class="code">
+// UPDATE `Books` SET `Title` = ? WHERE `id`=3
+// bind ['Alice in wonderland']
+Database::ExecuteUpdate('Books',new SqlName('id').'='.new Sql(new ID(3))
+	,'Title', 'Alice in wonderland'
+	);
+
+// UPDATE `Books` SET `DateDeleted` = ?
+// bind [null]
+Database::ExecuteUpdateAll('Books'                
+	,'DateDeleted', null
+	);
+</p>
+
+
+<h3>ExecuteDelete and ExecuteDeleteAll</h3>
+
+<p>
+Update rows from a table with or without a WHERE clause.
+</p>
+
+<p class="code">
+// DELETE FROM `Books` WHERE `id`=3
+Database::ExecuteDelete('Books',new SqlName('id').'='.new Sql(new ID(3)) );
+
+// DELETE FROM `Books`
+Database::ExecuteDeleteAll('Books');
+</p>
+
+
+<h2>DDL functions</h2>
+
+<p>
+Data Manipulation Language (DDL) functions are those functions that deal with the structure of the tables. The <span class="code">Database</span> class offers a few helpers for common DDL commands
+that are vendor independent.
+</p>
+
+<h3>ExecuteCreateTable and ExecuteCreateStandardTable</h3>
+
+<p>
+These functions will create a table in the database based on name-type pairs. The standard table variant will also insert a column named <b>id</b> with type Sql::ID and set it as the primary key.
+</p>
+
+<p class="code">
+// CREATE TABLE `Books` (`id` INT NOT NULL, `Title` VARCHAR(255), `Summary` TEXT, `NumberOfPages` INT) PRIMARY KEY ( `id` )
+Database::ExecuteCreateStandartTable('Books'
+	,'Title', Sql::String255
+	,'Summary', Sql::Text
+	,'NumberOfPages', Sql::Integer
+	);
+</p>
+
+<h3>ExecuteRenameTable and ExecuteDropTable</h3>
+
+<p>
+Remames a table...
+</p>
+
+<p class="code">
+Database::ExecuteRenameTable('Books','BookEntries');
+</p>
+
+<h3>ExecuteDropTable</h3>
+
+<p>
+Deletes a table...
+</p>
+
+<p class="code">
+Database::ExecuteDropTable('Books');
+</p>
+
+
+<h3>ExecuteAddFields and ExecuteDropFields</h3>
+
+<p>
+Add or remove fields in a table
+</p>
+
+<p class="code">
+Database::ExecuteAddFields('Books'
+	,'Author',Sql::String255
+	,'Translator',Sql::String255
+	);
+Database::ExecuteDropFields('Books'
+	,'Author'
+	,'Translator'
+	);
+</p>
+
+
+<h3>ExecuteRenameFields</h3>
+
+<p>
+Changes the name of one or more fields. Because of SQL limitations, it is necessary to pass the type of each field also.
+</p>
+
+<p class="code">
+Database::ExecuteRenameFields('Books'
+	,'NumberOfPages','NumPages',Sql::Integer             // old_name -> new_name -> type
+	,'Translator','TranslatorName',Sql::String255        // old_name -> new_name -> type
+	);
+</p>
+
+
+<h3>ExecuteRecastFields</h3>
+
+<p>
+Changes the type of one or more fields.
+</p>
+
+<p class="code">
+Database::ExecuteRecastFields('Books'             
+	,'NumberOfPages',Sql::Integer                   // name -> type
+	,'Translator',Sql::String255                    // name -> type
+	);
+</p>
+
+
+
+<h2>Transactions</h2>
+
+<p>
+If the database driver supports transactions, then these can be used with the three following functions.
+</p>
+
+<p class="code">
+Database::TransactionBegin();
+try {
+	...
+	Database::TransactionCommit();
+}
+catch (Exception $ex){
+	Database::TransactionRollback();
+}
+</p>
+
+
+
+
+
+
+
+<h2>Database upgrade system</h2>
+
+<p>
+One of the problems when working with databases is that they constantly need upgrading as the code changes. The database upgrade system tries to tie the version control of the database to the version control
+of the code. This is not perfect, as this tie is forward only. If the code is reverted to a previews version, then there is no way back for the database. In addition, there is no conflict resolution if two
+developers try to change simultaneously the same part of the database. Having said that, the database upgrade system is an adequate solution for most of the cases.
+</p>
+
+<p>
+The version of the database is just not one number. As in code version control, the changes are not linear because several developer work in parallel. Instead, each developer has its own separate versioning
+sequence. The actual version of the database is the concatenation of the version of each developer. These numbers are stored inside the database, in a dedicated table.
+</p>
+
+<p>
+The upgrade system is modular, in the sense that each module should have it own separate upgrade script. In addition, each module has its own developers and a completely independent versioning system.
+</p>
+
+<p>
+The upgrade script has this structure:
+</p>
+
+<p class="ascii">
+--------------------------------
+| Initialisation               |
+--------------------------------
+| Developer 1 patch 1          |
+--------------------------------
+| Developer 1 patch 2          |
+--------------------------------
+| Developer 2 patch 1          |
+--------------------------------
+| Developer 1 patch 3          |
+--------------------------------
+| Developer 2 patch 2          |
+--------------------------------
+</p>
+
+<p>
+Because the upgrade script is just plain code, the management of patches from different developers is done by using the merging features of the code versioning system.
+</p>
+
+<p>
+The initialisation block will check if the version tracking table exists, and if not it will try to create it. This is the initialisation block of a hypothetical module,
+called hydrogen:
+</p>
+
+<p class="code">
+Database::SetPatchingSystem( 'hydrogen' , 'hyd_settings' );  // the name of the module and the version tracking table
+Database::AddPatcher('li','VersionLi');  // developer 1
+Database::AddPatcher('rb','VersionRb');  // developer 2
+
+if (Database::BeginPatchingSystem()) {
+	// create the tracking table as it does not exist:
+	Database::ExecuteCreateStandardTable('hyd_settings','VersionLi',Sql::Integer,'VersionRb',Sql::Integer);
+	Database::ExecuteInsert('hyd_settings','id',new ID(0),'VersionLi',0,'VersionRb',0);
+}
+</p>
+
+<p>
+Then each of the patches section looks like this:
+</p>
+
+<p class="code">
+if (Database::BeginPatch('li', 1, 'Creating the first table')){    // developer - version - comment
+	Database::ExecuteCreateStandardTable('hyd_books'
+		,'Title',Sql::String255
+		,'Author',Sql::String255
+		);
+	Database::ApplyPatch();
+}
+
+if (Database::BeginPatch('li', 2, 'Author have their own table')){
+	Database::ExecuteCreateStandardTable('hyd_authors'
+		,'Name',Sql::String255
+		);
+	Database::ExecuteAddFields('hyd_books'
+		,'idAuthor',Sql::ID
+		);
+	Database::ExecuteDropFields('hyd_books'
+		,'Author'
+		);
+	Database::ApplyPatch();
+}
+</p>
+
+<p>
+If the second developer wants to make a change, he or she must use a separate numbering sequence.
+</p>
+
+<p class="code">
+...
+if (Database::BeginPatch('rb', 1, 'Adding a comments table')){
+	Database::ExecuteCreateStandardTable('hyd_comments'
+		,'Sender',Sql::String255
+		,'Message',Sql::Text
+		);
+	Database::ApplyPatch();
+}
+</p>
+
+<p>
+Adding another developer to the team is a patch by itself:
+</p>
+
+<p class="code">
+...
+if (Database::BeginPatch('li', 2, 'Adding jc as a developer')){
+	Database::ExecuteAddFields('hyd_settings','VersionJc',Sql::Integer);
+	Database::ExecuteUpdateAll('hyd_settings','VersionJc',0);
+	Database::ApplyPatch();
+}
+Database::AddPatcher('jc','VersionJc');  // The patcher command should come here, after the table is created.
+</p>
+
+<p class="warning">
+The upgrade script should be both backwards and forwards compatible. When executed on an old database it should bring it to date. On the other hand, anything that exists in the patches should
+not depend on any other part of the module, because this is not guarranded to exist in future versions, and the whole point of the system is to work inside future versions.
+</p>
+
+<p>
+The patches will be actually applied the first time the script is executed, when a managed connection is opened to the database. Then they wont be executed again unless they are changed.
+</p>
+
+
+
+<footer>
+<a href="index.html">&larr; Table of contents</a>
+</footer>
+
+</body></html>
