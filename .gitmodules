@@ -1,4 +1,4 @@
 [submodule "oxy"]
 	path = oxy
-	url = https://linepogl:test@github.com/linepogl/oxygen.git
+	url = git://github.com/linepogl/oxygen.git
 	
