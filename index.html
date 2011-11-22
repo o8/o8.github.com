@@ -4,7 +4,7 @@
 <style>
 img { border:0; }
 body { margin:0; padding:0; }
-body, td { font:14px/16px Trebuchet MS, Helvetica, sans-serif; color:#666666; text-align:justify; }
+body, td { font:14px/18px Trebuchet MS, Helvetica, sans-serif; color:#666666; text-align:justify; }
 .top1 { background:url(img/top_bg.png) 0 0 repeat-x;width:100%;height:510px; }
 .top2 { background:url(img/top.png) 0 0 no-repeat;width:972px;height:493px; }
 .main { width:900px; }
@@ -15,7 +15,8 @@ a:hover { color:#000000; text-decoration:none; }
 a.download       { display:block; margin-top:325px; margin-left:546px; width:238px; height:84px; background:url(img/download.png) 0 0 no-repeat; text-decoration:none; }
 a.download:hover { background:url(img/download_hover.png) 0 0 no-repeat; text-decoration:none; }
 
-p.useless { border:1px dashed #999999; border-radius:5px; padding:16px 26px 10px 26px; background:#f8f8f8; margin:20px 0; }
+p.useless { border:1px dashed #999999; border-radius:5px; padding:16px 26px 16px 26px; background:#f8f8f8; margin:20px 0; line-height:23px; }
+sub { font-size:80%; line-height:1px; }
 
 .buttons a { color:#884444; font-weight:bold; display:block; float:left; border:1px solid #cccccc; border-radius:5px; padding:14px 20px 14px 75px; background:#fafafa; width:113px; margin:10px 20px 10px 0; }
 .buttons a.last { margin-right:0; }
@@ -30,7 +31,6 @@ p.useless { border:1px dashed #999999; border-radius:5px; padding:16px 26px 10px
 .buttons a.star:hover { background:#f6f6f6 url(img/star_hover.gif) 0 50% no-repeat; }
 .buttons a.fork:hover { background:#f6f6f6 url(img/fork_hover.gif) 0 50% no-repeat; }
 .buttons a.bug:hover  { background:#f6f6f6 url(img/bug_hover.gif)  0 50% no-repeat; }
-
 .footer { background:#333333; border-top:1px solid #000000; color:#aaaaaa; font-size:70%; text-align:center; padding:10px 0; margin:20px 0 0 0;}
 </style>
 </head>
@@ -55,20 +55,36 @@ p.useless { border:1px dashed #999999; border-radius:5px; padding:16px 26px 10px
 </div>
 <div style="clear:both;"></div>
 
+<br/><br/>
+
+<table width="100%" cellspacing="0" cellpadding="0" border="0"><tr>
+<td width="20" >&nbsp;</td>
+<td valign="top">
+
 <p>
-Lorem ipsum est ei velit viris temporibus, id tota nihil legimus qui, sed alia elitr animal ut. Everti audire similique nec cu, urbanitas adolescens nam ne. Pri puto tota adipiscing at, in pro sumo brute dicat. Sint scripta qui cu, quo ex graeci tamquam intellegat. Vix ex etiam nulla molestie, has cu instructior suscipiantur. 
+Solid Oxygen is the result of several years of personal experience on web application development, working as a head of software engineering teams. The main purpose of Solid Oxygen is to decrease the development time
+of the first version of a web application as well as the time to make subsequent changes.
 </p>
 
 <p>
-Has ne probo iusto contentiones, no omnesque recteque vis. Laudem alienum ponderum vel an. His te latine corpora definitiones, amet mutat soleat sit no, molestie invidunt comprehensam qui at. Eu viris interpretaris mel, at debet platonem gubergren pro. 
+Solid Oxygen is:
+</p>
+
+<ul>
+<li>A Database Abstraction Layer</li>
+<li>An Object-Relational Mapper</li>
+<li>A Model-View-Controller Framework</li>
+<li>A library of common utilities</li>
+</ul>
+
+<p>
+Solid Oxygen was initially developped in C# and ASP.NET, long before the introduction of LINQ with which shares several ideas. The C# version is also available and it is used in production environments.
+This is a translation in PHP, which takes into account the particularities and the idioms of the language and the platform that do not exist in C# and ASP.NET, such as Late Static Binding, the absence
+of multiple threads or shared memory, etc. Furthermore, it includes an implementation of LINQ for PHP.
 </p>
 
 <p>
-Ad has dolores partiendo, qui et blandit similique. Ei everti eleifend neglegentur usu, ad eum tation omnium impetus. An virtute omittantur mel, et stet admodum mea, et omnis affert est. In facilis pertinax philosophia cum, id falli animal eum, at aliquando complectitur eam. Wisi numquam posidonium cu quo, ea est minimum theophrastus, an quaeque intellegam nam. Wisi intellegat sed ex. 
-</p>
-
-<p>
-Qualisque prodesset theophrastus eu eum, cu mei aliquando adipiscing honestatis. Sea exerci semper vivendum id. Per ea albucius facilisi, dicit insolens ius ne. Mel in affert percipit recteque, ad regione consectetuer quo.
+PHP 5.3 is absolutely required. In addition, planned future versions will take advantage of the new features of PHP 5.4. It is always adviced to use the latest version of PHP.
 </p>
 
 <p>
@@ -76,15 +92,28 @@ Solid Oxygen is an open source project, distributed for free under the <a target
 </p>
 
 <p class="useless">
-<b>Useless fact of the day</b>: The chemical element of oxygen, under ridiculously high pressures, becomes solid and turns red. In this state, it forms custers of 8 atoms (O<sub>8</sub>). Solid oxygen is also known as ε-oxygen or octaoxygen or simply red oxygen. <a target="_blank" href="http://en.wikipedia.org/wiki/Solid_oxygen">[wikipedia]</a>
+<b>Useless fact of the day</b>: The chemical element of oxygen, under ridiculously high pressures, becomes solid and turns red. In this state, it forms custers of 8 atoms (O<sub>8</sub>). Solid oxygen is
+also known as ε-oxygen or octaoxygen or simply red oxygen. <a target="_blank" href="http://en.wikipedia.org/wiki/Solid_oxygen">[wikipedia]</a>
 </p>
 
+</td>
+<td width="20" >&nbsp;</td>
+<td width="20" style="border-left:1px solid #dddddd;">&nbsp;</td>
+<td valign="top">
+
+<p><a href="http://linepogl.wordpress.com"><img alt='' src='http://0.gravatar.com/avatar/2e7382e45c23afe2525e117cc1636677?s=64&amp;d=identicon&amp;r=G' height='64' width='64' /></a></p>
+
+</td>
+<td width="20" >&nbsp;</td>
+</tr></table>
 
 </td></tr></table>
+
+	<br/><br/>
 </center>
 
 <p class="footer">
-Copyright &copy; 2011 Lazarus Inepologlou
+Copyright &copy; 2011 Lazare Inepologlou
 </p>
 </body>
 </html>
